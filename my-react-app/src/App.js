@@ -1,9 +1,148 @@
 import logo from './logo.svg';
 import './App.css';
+import React, { useEffect, useState } from "react";
+import { ethers } from "ethers";
+import abi from "./utils/WavePortal.json";
 
+
+const getEthereumObject = () => window.ethereum;
+
+const findMetaMaskAccount = async () => {
+  try {
+    const ethereum = getEthereumObject();
+
+    if (!ethereum) {
+      console.error("No MetaMask found");
+      return null;
+    }
+    console.log("We have an Ethereum object (MetaMask)");
+    const accounts = await ethereum.request({method: "eth_accounts"});
+
+    if (accounts.length !== 0) {
+      const account = accounts[0];
+      console.log("Found an authorized account: ", account);
+      return account;
+    } else {
+      console.log("No authorized account found");
+      return null;
+    }
+  } catch (error) {
+    console.error(error);
+    return null;
+  }
+}
 
 
 function App() {
+
+  const [currentAccount, setCurrentAccount] = useState("");
+  const [allWaves, setAllWaves] = useState([]);
+  /**
+   * Create a varaible here that holds the contract address after you deploy!
+   */
+  const contractAddress = "0xe45Df73651F876996cb923e716d4Aa8CDAf1AbaB";
+  const contractABI = abi.abi;
+
+  const connectWallet = async () => {
+    try {
+      const ethereum = getEthereumObject();
+      if (!ethereum) {
+        alert("Get MetaMask!");
+        return;
+      }
+
+      const accounts = await ethereum.request({method: "eth_requestAccounts"});
+
+      console.log("Connected", accounts[0]);
+      setCurrentAccount(accounts[0]);
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  const getAllWaves = async () => {
+    try {
+      const { ethereum } = window;
+      if (ethereum) {
+        const provider = new ethers.providers.Web3Provider(ethereum);
+        const signer = provider.getSigner();
+        const wavePortalContract = new ethers.Contract(contractAddress, contractABI, signer);
+
+        /*
+         * Call the getAllWaves method from your Smart Contract
+         */
+        const waves = await wavePortalContract.getAllWaves();
+
+
+        /*
+         * We only need address, timestamp, and message in our UI so let's
+         * pick those out
+         */
+        let wavesCleaned = [];
+        waves.forEach(wave => {
+          wavesCleaned.push({
+            address: wave.waver,
+            timestamp: new Date(wave.timestamp * 1000),
+            message: wave.message
+          });
+        });
+
+        /*
+         * Store our data in React State
+         */
+        setAllWaves(wavesCleaned);
+      } else {
+        console.log("Ethereum object doesn't exist!")
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  const wave = async () => {
+    try {
+      const { ethereum } = window;
+
+      if (ethereum) {
+        const provider = new ethers.providers.Web3Provider(ethereum);
+        const signer = provider.getSigner();
+        const wavePortalContract = new ethers.Contract(contractAddress, contractABI, signer);
+
+        let count = await wavePortalContract.getTotalWaves();
+        console.log("Retrieved total wave count...", count.toNumber());
+
+        /*
+        * Execute the actual wave from your smart contract
+        */
+        const waveTxn = await wavePortalContract.wave("a message");
+        console.log("Mining...", waveTxn.hash);
+
+        await waveTxn.wait();
+        console.log("Mined -- ", waveTxn.hash);
+
+        count = await wavePortalContract.getTotalWaves();
+        console.log("Retrieved total wave count...", count.toNumber());
+      } else {
+        console.log("Ethereum object doesn't exist!");
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  /*
+   * The passed callback function will be run when the page loads.
+   * More technically, when the App component "mounts".
+   */
+  useEffect(() => {
+    const account = findMetaMaskAccount();
+    if (account !== null) {
+      setCurrentAccount(account);
+    } 
+  }, [])
+  
+
+
   return (
     <div className="w3-black">
 
@@ -86,10 +225,18 @@ function App() {
             Meetings
           </div>
         </div>
+        {!currentAccount && (
 
-        <button className="w3-button w3-light-grey w3-padding-large w3-section">
-          <i className="fa fa-download"></i> Download Resume
-        </button>
+          <button className="w3-button w3-light-grey w3-padding-large w3-section" onClick={connectWallet}>
+            <i className="fa fa-download"></i> Connect Wallet
+          </button>
+        )}
+        {currentAccount && (
+          <div>
+            <hr style={{width: '200px'}} className="w3-opacity" />
+            <p>Wallet is already Connected!</p> 
+          </div>          
+        )}
         
         <h3 className="w3-padding-16 w3-text-light-grey">What I can offer you</h3>
         <div className="w3-row-padding" style={{margin: '0 -16px'}}>
@@ -180,7 +327,20 @@ function App() {
             </button>
           </p>
         </form>
+        <button className='w3-button w3-light-grey w3-padding-large' onClick={wave}>
+          <i className="fa fa-paper-plane"></i> Wave at me!
+        </button>
       </div>
+    
+
+      {allWaves.map((wave, index) => {
+          return (
+            <div key={index} style={{ backgroundColor: "OldLace", marginTop: "16px", padding: "8px" }}>
+              <div>Address: {wave.address}</div>
+              <div>Time: {wave.timestamp.toString()}</div>
+              <div>Message: {wave.message}</div>
+            </div>)
+      })}
       
     <footer className="w3-content w3-padding-64 w3-text-grey w3-xlarge">
       <a style={{textDecoration: 'none'}} href="https://www.google.com">
