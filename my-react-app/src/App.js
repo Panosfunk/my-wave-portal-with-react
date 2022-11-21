@@ -37,10 +37,11 @@ function App() {
 
   const [currentAccount, setCurrentAccount] = useState("");
   const [allWaves, setAllWaves] = useState([]);
+  const [isBeingMined, setIsBeingMined] = useState(false);
   /**
    * Create a varaible here that holds the contract address after you deploy!
    */
-  const contractAddress = "0xe45Df73651F876996cb923e716d4Aa8CDAf1AbaB";
+  const contractAddress = "0xF2f41eE678738dAcc70cD15567a3AB3e5E3c6809";
   const contractABI = abi.abi;
 
   const connectWallet = async () => {
@@ -81,16 +82,19 @@ function App() {
         let wavesCleaned = [];
         waves.forEach(wave => {
           wavesCleaned.push({
-            address: wave.waver,
+            address: wave.sender,
             timestamp: new Date(wave.timestamp * 1000),
             message: wave.message
           });
         });
 
+        wavesCleaned.sort((a, b) => (a.timestamp < b.timestamp) ? 1 : -1)
+
         /*
          * Store our data in React State
          */
         setAllWaves(wavesCleaned);
+        console.log(waves);
       } else {
         console.log("Ethereum object doesn't exist!")
       }
@@ -111,17 +115,22 @@ function App() {
         let count = await wavePortalContract.getTotalWaves();
         console.log("Retrieved total wave count...", count.toNumber());
 
+        let messageText = document.getElementById("messageInput").value;
+
         /*
         * Execute the actual wave from your smart contract
         */
-        const waveTxn = await wavePortalContract.wave("a message");
+        const waveTxn = await wavePortalContract.wave(messageText);
         console.log("Mining...", waveTxn.hash);
+        setIsBeingMined(true);
 
         await waveTxn.wait();
         console.log("Mined -- ", waveTxn.hash);
+        setIsBeingMined(false);
 
         count = await wavePortalContract.getTotalWaves();
         console.log("Retrieved total wave count...", count.toNumber());
+        getAllWaves();
       } else {
         console.log("Ethereum object doesn't exist!");
       }
@@ -138,6 +147,7 @@ function App() {
     const account = findMetaMaskAccount();
     if (account !== null) {
       setCurrentAccount(account);
+      getAllWaves();
     } 
   }, [])
   
@@ -225,18 +235,6 @@ function App() {
             Meetings
           </div>
         </div>
-        {!currentAccount && (
-
-          <button className="w3-button w3-light-grey w3-padding-large w3-section" onClick={connectWallet}>
-            <i className="fa fa-download"></i> Connect Wallet
-          </button>
-        )}
-        {currentAccount && (
-          <div>
-            <hr style={{width: '200px'}} className="w3-opacity" />
-            <p>Wallet is already Connected!</p> 
-          </div>          
-        )}
         
         <h3 className="w3-padding-16 w3-text-light-grey">What I can offer you</h3>
         <div className="w3-row-padding" style={{margin: '0 -16px'}}>
@@ -316,7 +314,7 @@ function App() {
         </div><br />
         <p>Let's get in touch. Send me a message:</p>
 
-        <form action="/action_page.php" target="_blank">
+        {/* <form action="/action_page.php" target="_blank">
           <p><input className="w3-input w3-padding-16" type="text" placeholder="Name" required name="Name" /></p>
           <p><input className="w3-input w3-padding-16" type="text" placeholder="Email" required name="Email" /></p>
           <p><input className="w3-input w3-padding-16" type="text" placeholder="Subject" required name="Subject" /></p>
@@ -326,21 +324,43 @@ function App() {
               <i className="fa fa-paper-plane"></i> SEND MESSAGE
             </button>
           </p>
-        </form>
+        </form> */}
+        
+      </div>
+
+      <div className='w3-padding-64 w3-content w3-text-grey w3-section'>
+        {!currentAccount && (
+          <button className="w3-button w3-light-grey w3-padding-large w3-section" onClick={connectWallet}>
+            <i className="fa fa-download"></i> Connect Wallet
+          </button>
+        )}
+        
+        {currentAccount && (
+          <div>
+            <hr style={{width: '200px'}} className="w3-opacity" />
+            <p>Wallet is already Connected!</p> 
+          </div>          
+        )}
+
+        <p><input className='w3-input w3-padding-16' type="text" id='messageInput' placeholder='Type your message here' cols={35} /></p>
+
         <button className='w3-button w3-light-grey w3-padding-large' onClick={wave}>
           <i className="fa fa-paper-plane"></i> Wave at me!
         </button>
-      </div>
-    
 
-      {allWaves.map((wave, index) => {
+        {isBeingMined && (
+          <div className="loader"></div>
+        )}
+        
+        {allWaves.map((wave, index) => {
           return (
-            <div key={index} style={{ backgroundColor: "OldLace", marginTop: "16px", padding: "8px" }}>
-              <div>Address: {wave.address}</div>
-              <div>Time: {wave.timestamp.toString()}</div>
-              <div>Message: {wave.message}</div>
+            <div className='w3-text-grey w3-black' key={index} style={{ marginTop: "16px", padding: "8px" }}>
+              <div>This person: {wave.address} waved at you!</div>
+              <div>When: {wave.timestamp.toUTCString() }</div>
+              <div>What they said: {wave.message}</div>
             </div>)
-      })}
+        })}
+      </div>
       
     <footer className="w3-content w3-padding-64 w3-text-grey w3-xlarge">
       <a style={{textDecoration: 'none'}} href="https://www.google.com">
