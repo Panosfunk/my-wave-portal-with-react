@@ -38,13 +38,13 @@ contract WavePortal {
             /*
              * The same code we had before to send the prize.
              */
-            uint256 prizeAmount = 0.0001 ether;
-            require(
-                prizeAmount < address(this).balance - 0.001 ether,
-                "Trying to withdraw more money than the contract has."
-            );
-            (bool success, ) = (msg.sender).call{value: prizeAmount}("");
-            require(success, "Failed to withdraw money from contract.");
+            // uint256 prizeAmount = 0.0001 ether;
+            // require(
+            //     prizeAmount < address(this).balance,
+            //     "Trying to withdraw more money than the contract has."
+            // );
+            // (bool success, ) = (msg.sender).call{value: prizeAmount}("");
+            // require(success, "Failed to withdraw money from contract.");
         } else {
             console.log("%s Waved at me and did NOT win!", msg.sender);
         }

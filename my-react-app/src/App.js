@@ -41,7 +41,7 @@ function App() {
   /**
    * Create a varaible here that holds the contract address after you deploy!
    */
-  const contractAddress = "0xF2f41eE678738dAcc70cD15567a3AB3e5E3c6809";
+  const contractAddress = "0x0B03641Dee3F545dE8EDa0d01A1270Fd2bB3a0cA";
   const contractABI = abi.abi;
 
   const connectWallet = async () => {
@@ -174,6 +174,10 @@ function App() {
         <i className="fa fa-envelope w3-xxlarge"></i>
         <p>CONTACT</p>
       </a>
+      <a href="#wave" className="w3-bar-item w3-button w3-padding-large w3-hover-black">
+        <i className="fa fa-envelope w3-xxlarge"></i>
+        <p>WAVE</p>
+      </a>
     </nav>
 
     <div className="w3-top w3-hide-large w3-hide-medium" id="myNavbar">
@@ -182,6 +186,7 @@ function App() {
         <a href="#about" className="w3-bar-item w3-button" style={{width: '25% !important'}}>ABOUT</a>
         <a href="#photos" className="w3-bar-item w3-button" style={{width: '25% !important'}}>PHOTOS</a>
         <a href="#contact" className="w3-bar-item w3-button" style={{width: '25% !important'}}>CONTACT</a>
+        <a href="#wave" className="w3-bar-item w3-button" style={{width: '25% !important'}}>WAVE</a>
       </div>
     </div>
 
@@ -328,7 +333,11 @@ function App() {
         
       </div>
 
-      <div className='w3-padding-64 w3-content w3-text-grey w3-section'>
+      <div className='w3-padding-64 w3-content w3-text-grey w3-section' id="wave">
+
+        <h2 className="w3-text-light-grey">Wave At Me</h2>
+        <hr style={{width: '200px'}} className="w3-opacity" />
+        
         {!currentAccount && (
           <button className="w3-button w3-light-grey w3-padding-large w3-section" onClick={connectWallet}>
             <i className="fa fa-download"></i> Connect Wallet
@@ -337,12 +346,11 @@ function App() {
         
         {currentAccount && (
           <div>
-            <hr style={{width: '200px'}} className="w3-opacity" />
             <p>Wallet is already Connected!</p> 
           </div>          
         )}
 
-        <p><input className='w3-input w3-padding-16' type="text" id='messageInput' placeholder='Type your message here' cols={35} /></p>
+        <p><input className='w3-input w3-padding-16' type="text" id='messageInput' placeholder='Type your message here'/></p>
 
         <button className='w3-button w3-light-grey w3-padding-large' onClick={wave}>
           <i className="fa fa-paper-plane"></i> Wave at me!
