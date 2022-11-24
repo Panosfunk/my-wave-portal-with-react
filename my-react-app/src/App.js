@@ -35,7 +35,7 @@ const findMetaMaskAccount = async () => {
 
 function App() {
 
-  const [currentAccount, setCurrentAccount] = useState("");
+  const [currentAccount, setCurrentAccount] = useState(null);
   const [allWaves, setAllWaves] = useState([]);
   const [isBeingMined, setIsBeingMined] = useState(false);
   /**
@@ -43,6 +43,32 @@ function App() {
    */
   const contractAddress = "0x0B03641Dee3F545dE8EDa0d01A1270Fd2bB3a0cA";
   const contractABI = abi.abi;
+  
+  const checkIfWalletIsConnected = async () => {
+    try {
+      const { ethereum } = window;
+
+      if (!ethereum) {
+        console.log("Make sure you have metamask!");
+        return;
+      } else {
+        console.log("We have the ethereum object", ethereum);
+      }
+
+      const accounts = await ethereum.request({ method: 'eth_accounts' });
+
+      if (accounts.length !== 0) {
+        const account = accounts[0];
+        console.log("Found an authorized account:", account);
+        setCurrentAccount(account)
+        getAllWaves();
+      } else {
+        console.log("No authorized account found")
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  }
 
   const connectWallet = async () => {
     try {
@@ -56,6 +82,7 @@ function App() {
 
       console.log("Connected", accounts[0]);
       setCurrentAccount(accounts[0]);
+      getAllWaves();
     } catch (error) {
       console.error(error);
     }
@@ -144,11 +171,17 @@ function App() {
    * More technically, when the App component "mounts".
    */
   useEffect(() => {
-    const account = findMetaMaskAccount();
-    if (account !== null) {
-      setCurrentAccount(account);
-      getAllWaves();
-    } 
+    // const account = findMetaMaskAccount();
+    // console.log("im currently null btw", account);
+    // // document.getElementById("myText").innerHTML = currentAccount;
+    // if (account !== null) {
+    //   console.log("im going in", account);
+    //   setCurrentAccount(account);
+
+    //   console.log("im currently null btw2", account);
+    //   getAllWaves();
+    // } 
+    checkIfWalletIsConnected();
   }, [])
   
 
@@ -175,7 +208,7 @@ function App() {
         <p>CONTACT</p>
       </a>
       <a href="#wave" className="w3-bar-item w3-button w3-padding-large w3-hover-black">
-        <i className="fa fa-envelope w3-xxlarge"></i>
+        <i className="fa fa-connectdevelop w3-xxlarge"></i>
         <p>WAVE</p>
       </a>
     </nav>
@@ -346,6 +379,7 @@ function App() {
         
         {currentAccount && (
           <div>
+            <span id="myText"></span>
             <p>Wallet is already Connected!</p> 
           </div>          
         )}
